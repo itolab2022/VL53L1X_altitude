@@ -14,10 +14,11 @@ uint16_t dev = 0x29;
 uint16_t distance = 0;
 uint8_t isDataReady = 0;
 uint8_t rangeStatus = 0;
-uint8_t state = 1;
+uint8_t state = 0;
 uint8_t tmp = 0;
 int sleep_time = 2000;
 int ms = 200;
+uint64_t start_time,current_time;
 
 int main (void) {
     uint8_t byte_data_read[16]; //readした値の格納用
@@ -40,42 +41,68 @@ int main (void) {
     // /* Platform Initialization code here*/
     // /* Wait for device booted*/
 
-    sleep_ms(ms);
+    sleep_ms(3000);
+    printf("\n\n\nStart VL53L1X.....\n");
 
     // Status = i2c_write_timeout_us(I2C_PORT,dev,byte_data_write,2,false,600); 
     // Status = i2c_read_timeout_us(I2C_PORT,dev,byte_data_read,1,false,600);
+#if 0
+    uint8_t dummy_data[2],data2=0xff;
+    dummy_data[0]=0x01;
+    dummy_data[1]=0x10;
+    int8_t dummy_status;
+    while(1){
+        dummy_status = i2c_write_timeout_us(I2C_PORT,0x29,dummy_data,2,true,600); 
+        printf("write status:%d\n",dummy_status);
+        busy_wait_us_32(1000);
+        dummy_status = i2c_read_timeout_us(I2C_PORT,0x29,&data2,1,false,600);
+        printf("read status:%d data:%02X\n",dummy_status, data2);
 
-    while(state) {
+    }
+#endif
+
+    while((state&1)==0) {
         Status = VL53L1X_BootState(dev, &state);
         sleep_ms(ms);
-        printf("%d\n",state);
-    };
-
-    while(1){
-        printf("%d\n",state);
+        printf("Boot state:%d\n",state);
+        printf("Boot Status:%d\n",Status);
     }
+    printf("VLX53L1X Booted\n");
+    //while(1){
+    //    printf("%d\n",state);
+    //}
     
 
-    // /* Sensor Initialization */
-    // Status = VL53L1X_SensorInit(dev);
-
+    /* Sensor Initialization */
+    Status = VL53L1X_SensorInit(dev);
+    printf("Init status:%d\n",Status);
+    //while(1);
     // /* Modify the default configuration */
-    // // Status = VL53L1X_SetInterMeasurementPeriod();
-    // Status = VL53L1X_SetOffset(dev,OffsetValue);
+    Status = VL53L1X_SetDistanceMode(dev,2);
+    Status = VL53L1X_SetTimingBudgetInMs(dev, 20);
+    Status = VL53L1X_SetInterMeasurementInMs(dev, 20);
+    //Status = VL53L1X_SetOffset(dev,OffsetValue);
 
+    //Enable the ranging
+    Status = VL53L1X_StartRanging(dev);
+    printf("Enable ranging status:%d\n",Status);
+    
     // /* ranging loop */
-    // while(1){
-    //     while(isDataReady==0){
-    //         Status = VL53L1X_CheckForDataReady (dev, &isDataReady);
-    //     }
-    //     isDataReady =0;
-    //     Status = VL53L1X_GetRangeStatus(dev,&rangeStatus);
-    //     Status = VL53L1X_GetDistance(dev,&distance);
-    //     Status = VL53L1X_ClearInterrupt(dev);
-    //     printf(Status);
-    //     printf("Hello\n");
-    // }
-    // while(1){
-    //     printf("Hello\n");
-    // }
+
+    start_time = time_us_64();
+    current_time = start_time;
+    while(1){
+        //start_time = current_time;
+         while(isDataReady==0){
+             Status = VL53L1X_CheckForDataReady (dev, &isDataReady);
+             //printf("Data ready status:%d isDataReady %d\n",Status, isDataReady);
+         }
+         isDataReady =0;
+         Status = VL53L1X_GetRangeStatus(dev,&rangeStatus);
+         Status = VL53L1X_GetDistance(dev,&distance);
+         Status = VL53L1X_ClearInterrupt(dev);
+         //printf("Status:%02X RangeStatus:%d Distance:%d\n",Status, rangeStatus, distance);
+        printf("%6.9f, %4d\n", (current_time-start_time)/1000000.0, distance);
+        current_time = time_us_64();        
+     }
 }
