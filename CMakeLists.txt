@@ -9,9 +9,10 @@ set(CMAKE_CXX_STANDARD 17)
 # set(PICO_EXAMPLES_PATH ${PROJECT_SOURCE_DIR})
 
 pico_sdk_init()
+include_directories(/Users/kokoro/Documents/drone_project/pico/eigen)
 
 add_executable(vl53l1x_test
-  test.c
+  test.cpp
   vl53l1_platform.c
   VL53L1X_api.c
   VL53L1X_calibration.c

@@ -1,0 +1,3 @@
+/Users/kokoro/Documents/drone_project/pico/pico-sdk/VL53L1X_altitude/pioasm/CMakeFiles/pioasm.dir
+/Users/kokoro/Documents/drone_project/pico/pico-sdk/VL53L1X_altitude/pioasm/CMakeFiles/edit_cache.dir
+/Users/kokoro/Documents/drone_project/pico/pico-sdk/VL53L1X_altitude/pioasm/CMakeFiles/rebuild_cache.dir
