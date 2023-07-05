@@ -82,7 +82,7 @@ int _I2CWrite(uint16_t Dev, uint8_t *pdata, uint32_t count) {
         status = 0;
     };
     //printf("status for write(after if) : %d\n" , status);
-    sleep_ms(2);
+    //sleep_ms(2);
     return status;
 }
 

@@ -18,7 +18,8 @@ uint8_t state = 0;
 uint8_t tmp = 0;
 int sleep_time = 2000;
 int ms = 200;
-uint64_t start_time,current_time;
+uint64_t start_time,current_time,elapsed_time,old_elapsed_time,data_get_start,data_get_end;
+uint64_t ready_check_start,ready_check_end;
 
 int main (void) {
     // uint8_t byte_data_read[16]; //readした値の格納用
@@ -64,8 +65,8 @@ int main (void) {
     // // Status = VL53L1X_SetInterMeasurementPeriod();
     // Status = VL53L1X_SetOffset(dev,OffsetValue);
     Status = VL53L1X_SetDistanceMode(dev,2);
-    Status = VL53L1X_SetTimingBudgetInMs(dev,500);
-    Status = VL53L1X_SetInterMeasurementInMs(dev,500);
+    Status = VL53L1X_SetTimingBudgetInMs(dev,33);
+    Status = VL53L1X_SetInterMeasurementInMs(dev,33);
 
     //Enable the ranging
     Status = VL53L1X_StartRanging(dev);
@@ -75,7 +76,9 @@ int main (void) {
     current_time = start_time;
     while(1){
         while(isDataReady==0){
+            ready_check_start = time_us_64();
             Status = VL53L1X_CheckForDataReady(dev, &isDataReady);
+            ready_check_end = time_us_64();
             // printf("--------------------------------------\n");
             // printf("Status (isDataReady loop) : %d\n", Status);
             // printf("isDataReady (isDataReady loop) : %d\n", isDataReady);
@@ -86,11 +89,24 @@ int main (void) {
         //     printf("isDataReady (ranging loop) : %d\n", isDataReady);
         // }
         isDataReady =0;
+        data_get_start = time_us_64();
         Status = VL53L1X_GetRangeStatus(dev,&rangeStatus);
         Status = VL53L1X_GetDistance(dev,&distance);
         Status = VL53L1X_ClearInterrupt(dev);
+        data_get_end = time_us_64();
+
         // printf(" Status(ranging loop) : %d\n ",Status);
-        printf("%9.6f %4d\n",(current_time-start_time)/1000000.0,distance);
+        elapsed_time = current_time-start_time;
+        
+        //Print Data
+        printf("%9.6f %9.6f %9.6f %9.6f %4d\r\n",
+            elapsed_time/1000000.0, 
+            (elapsed_time-old_elapsed_time)/1000000.0,
+            (data_get_end - data_get_start)/1000000.0,
+            (ready_check_end - ready_check_start)/1000000.0,
+            distance);
+        
+        old_elapsed_time = elapsed_time;
         current_time = time_us_64();
         // printf("distance : %d\n",distance);
     }
